@@ -16,12 +16,16 @@ public class Bits {
         return 1L << bits;
     }
 
+    public static BigInteger getBigPow2(int bits) {
+        return BigInteger.ONE.shiftLeft(bits);
+    }
+
     public static long getMask(int bits) {
         return bits >= 64 ? ~0 : getPow2(bits) - 1;
     }
 
     public static BigInteger getBigMask(int bits) {
-        return BigInteger.ONE.shiftLeft(bits).subtract(BigInteger.ONE);
+        return getBigPow2(bits).subtract(BigInteger.ONE);
     }
 
     public static long mask(long value, int bits) {
@@ -36,17 +40,17 @@ public class Bits {
         return value << (64 - bits) >> (64 - bits); //removes top bits and copies sign bits back down
     }
 
-    public static long modInverse(long a) {
-        return modInverse(a, 64);
+    public static long modInverse(long value) {
+        return modInverse(value, 64);
     }
 
-    public static long modInverse(long a, int k) {
-        long x = ((((a << 1) ^ a) & 4) << 1) ^ a;
+    public static long modInverse(long value, int k) {
+        long x = ((((value << 1) ^ value) & 4) << 1) ^ value;
 
-        x += x - a * x * x;
-        x += x - a * x * x;
-        x += x - a * x * x;
-        x += x - a * x * x;
+        x += x - value * x * x;
+        x += x - value * x * x;
+        x += x - value * x * x;
+        x += x - value * x * x;
 
         return mask(x, k);
     }
