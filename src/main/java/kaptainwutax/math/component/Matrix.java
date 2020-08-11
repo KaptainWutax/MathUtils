@@ -30,6 +30,10 @@ public class Matrix {
         return new Matrix(rows, columns, (row, column) -> Rational.ZERO);
     }
 
+    public static Matrix identity(int size) {
+        return new Matrix(size, size, (row, column) -> Rational.ONE);
+    }
+
     public int getRowCount() {
         return this.elements.length;
     }
@@ -135,15 +139,27 @@ public class Matrix {
         return this.mapColumn(column, value.toMapper());
     }
 
-    public Vector[] getRows() {
+    public Vector.View[] getRows() {
+        Vector.View[] rows = new Vector.View[this.getRowCount()];
+        for(int i = 0; i < rows.length; i++)rows[i] = this.getRow(i);
+        return rows;
+    }
+
+    public Vector.View[] getColumns() {
+        Vector.View[] columns = new Vector.View[this.getColumnCount()];
+        for(int i = 0; i < columns.length; i++)columns[i] = this.getColumn(i);
+        return columns;
+    }
+
+    public Vector[] getRowsCopy() {
         Vector[] rows = new Vector[this.getRowCount()];
         for(int i = 0; i < rows.length; i++)rows[i] = this.getRowCopy(i);
         return rows;
     }
 
-    public Vector[] getColumns() {
+    public Vector[] getColumnsCopy() {
         Vector[] columns = new Vector[this.getColumnCount()];
-        for(int i = 0; i < columns.length; i++)columns[i] = this.getRowCopy(i);
+        for(int i = 0; i < columns.length; i++)columns[i] = this.getColumnCopy(i);
         return columns;
     }
 

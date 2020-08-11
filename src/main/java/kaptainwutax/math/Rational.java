@@ -154,6 +154,22 @@ public class Rational extends Number implements Comparable<Rational> {
         return this.pow(exponent.longValueExact());
     }
 
+    public Rational shiftRight(int n) {
+        Rational r = this;
+        int i = Math.min(this.getNumerator().getLowestSetBit(), n);
+        if(i > 0)r = new Rational(this.getNumerator().shiftRight(i), this.getDenominator());
+        if(n - i > 0)r = new Rational(r.getNumerator(), r.getDenominator().shiftLeft(n - i));
+        return r;
+    }
+
+    public Rational shiftLeft(int n) {
+        Rational r = this;
+        int i = Math.min(this.getDenominator().getLowestSetBit(), n);
+        if(i > 0)r = new Rational(this.getNumerator(), this.getDenominator().shiftRight(i));
+        if(n - i > 0)r = new Rational(r.getNumerator().shiftLeft(n - i), r.getDenominator());
+        return r;
+    }
+
     public Rational floor() {
         if(this.getDenominator().equals(BigInteger.ONE))return this;
         BigInteger a = this.getNumerator().divide(this.getDenominator());
@@ -250,10 +266,7 @@ public class Rational extends Number implements Comparable<Rational> {
     public boolean equals(Object other) {
         if(other == this)return true;
         if(!(other instanceof Rational))return false;
-        Rational r = ((Rational)other).reduce();
-        this.reduce();
-        return this.getNumerator().equals(r.getNumerator())
-                && this.getDenominator().equals(r.getDenominator());
+        return this.compareTo((Rational)other) == 0;
     }
 
     @Override

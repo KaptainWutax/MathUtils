@@ -4,10 +4,10 @@ import java.util.Arrays;
 
 public final class Polynomial {
 
-	private final Rational[] coefficients;
-	private int degree = -1;
+	protected final Rational[] coefficients;
+	protected int degree = -1;
 
-	private Polynomial derivative;
+	protected Polynomial derivative;
 
 	public Polynomial(Rational... coefficients) {
 		this.coefficients = coefficients;
@@ -20,7 +20,7 @@ public final class Polynomial {
 		this.degree = exponent;
 	}
 
-	private void computeDegree() {
+	protected void computeDegree() {
 		for(int i = this.coefficients.length - 1; i >= 0; i--) {
 			if(this.coefficients[i].signum() != 0) {
 				this.degree = i;
@@ -29,15 +29,15 @@ public final class Polynomial {
 		}
 	}
 
-	public int degree() {
+	public int getDegree() {
 		return this.degree;
 	}
 
-	public Rational coefficient(int exponent) {
+	public Rational getCoefficient(int exponent) {
 		return this.coefficients[exponent];
 	}
 
-	public Rational[] coefficients() {
+	public Rational[] getCoefficients() {
 		return Arrays.copyOf(this.coefficients, this.coefficients.length);
 	}
 
@@ -103,6 +103,25 @@ public final class Polynomial {
 		}
 
 		return r;
+	}
+
+	@Override
+	public int hashCode() {
+		return 31 * this.degree + Arrays.hashCode(this.coefficients);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(this == other)return true;
+		if(!(other instanceof Polynomial))return false;
+		Polynomial polynomial = (Polynomial)other;
+		if(this.degree != polynomial.degree)return false;
+
+		for(int i = 0; i < this.getDegree(); i++) {
+			if(this.getCoefficient(i).compareTo(polynomial.getCoefficient(i)) != 0)return false;
+		}
+
+		return true;
 	}
 
 	@Override

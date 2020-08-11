@@ -227,7 +227,7 @@ public class Vector {
         if(this.getDimension() != vector.getDimension())return false;
 
         for(int i = 0; i < this.elements.length; i++) {
-            if(!this.get(i).equals(vector.get(i)))return false;
+            if(this.get(i).compareTo(vector.get(i)) != 0)return false;
         }
 
         return true;
