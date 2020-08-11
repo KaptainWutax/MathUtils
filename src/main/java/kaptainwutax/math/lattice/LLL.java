@@ -39,7 +39,7 @@ public final class LLL {
         for(int k = 1; k < basis.getRowCount(); ) {
             for(int j = k - 1; j >= 0; j--) {
                 Rational rounded = coefficients.get(k, j).round();
-                if(rounded.compareTo(Rational.ZERO) == 0)continue;
+                if(rounded.signum() == 0)continue;
                 basis.getRow(k).subtractAndSet(basis.getRow(j).scale(rounded));
                 updateGramSchmidt(basis, newBasis, coefficients);
             }

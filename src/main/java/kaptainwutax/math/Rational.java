@@ -80,6 +80,10 @@ public class Rational extends Number implements Comparable<Rational> {
         return new Rational(this.getDenominator(), this.getNumerator());
     }
 
+    public int signum() {
+        return this.getNumerator().signum();
+    }
+
     public Rational min(Rational other) {
         return this.compareTo(other) <= 0 ? this : other;
     }
