@@ -1,8 +1,8 @@
-package kaptainwutax.math.lattice;
+package kaptainwutax.mathutils.lattice;
 
-import kaptainwutax.math.Rational;
-import kaptainwutax.math.component.Matrix;
-import kaptainwutax.math.component.Vector;
+import kaptainwutax.mathutils.Rational;
+import kaptainwutax.mathutils.component.Matrix;
+import kaptainwutax.mathutils.component.Vector;
 
 public final class LagrangeGauss {
 

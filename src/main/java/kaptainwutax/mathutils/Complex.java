@@ -1,4 +1,4 @@
-package kaptainwutax.math;
+package kaptainwutax.mathutils;
 
 public class Complex {
 

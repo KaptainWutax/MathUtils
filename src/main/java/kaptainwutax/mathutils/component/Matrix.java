@@ -1,6 +1,6 @@
-package kaptainwutax.math.component;
+package kaptainwutax.mathutils.component;
 
-import kaptainwutax.math.Rational;
+import kaptainwutax.mathutils.Rational;
 
 import java.util.Arrays;
 

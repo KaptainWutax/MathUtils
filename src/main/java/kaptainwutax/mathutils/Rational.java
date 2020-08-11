@@ -1,4 +1,4 @@
-package kaptainwutax.math;
+package kaptainwutax.mathutils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

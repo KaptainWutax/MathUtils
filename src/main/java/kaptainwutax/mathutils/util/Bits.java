@@ -1,4 +1,4 @@
-package kaptainwutax.math.util;
+package kaptainwutax.mathutils.util;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
