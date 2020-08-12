@@ -366,4 +366,15 @@ public class Matrix {
         }
     }
 
+    public static void main(String[] args) {
+        Matrix basis = new Matrix(
+                new Vector(new Rational(-989088L), new Rational(-23009024L)),
+                new Vector(new Rational(-12354965L), new Rational(-2831608L))
+        );
+
+        Vector vector = new Vector(new Rational(7768530L), new Rational(-621919L));
+        System.out.println(basis.multiply(vector));
+        System.out.println(vector.multiply(basis));
+    }
+
 }

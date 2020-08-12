@@ -175,7 +175,7 @@ public class Vector {
             throw new IllegalArgumentException("Vector length should equal the number of matrix columns");
         }
 
-        return new Vector(this.getDimension(), i -> this.dot(matrix.getRowCopy(i)));
+        return new Vector(this.getDimension(), i -> this.dot(matrix.getColumnCopy(i)));
     }
 
     public Vector multiplyAndSet(Matrix matrix) {
@@ -184,7 +184,7 @@ public class Vector {
         }
 
         Vector original = this.copy();
-        return this.mapAndSet((index, oldValue) -> original.dot(matrix.getRowCopy(index)));
+        return this.mapAndSet((index, oldValue) -> original.dot(matrix.getColumnCopy(index)));
     }
 
     public Vector divide(Rational scalar) {
