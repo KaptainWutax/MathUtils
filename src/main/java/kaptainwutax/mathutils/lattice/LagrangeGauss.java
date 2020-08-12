@@ -1,6 +1,6 @@
 package kaptainwutax.mathutils.lattice;
 
-import kaptainwutax.mathutils.Rational;
+import kaptainwutax.mathutils.arithmetic.Rational;
 import kaptainwutax.mathutils.component.Matrix;
 import kaptainwutax.mathutils.component.Vector;
 

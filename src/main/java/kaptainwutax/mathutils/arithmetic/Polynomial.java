@@ -1,4 +1,4 @@
-package kaptainwutax.mathutils;
+package kaptainwutax.mathutils.arithmetic;
 
 import java.util.Arrays;
 
