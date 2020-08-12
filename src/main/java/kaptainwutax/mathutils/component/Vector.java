@@ -66,6 +66,16 @@ public class Vector {
         return this;
     }
 
+    public Rational[] getElements() {
+        Rational[] elements = new Rational[this.getDimension()];
+
+        for(int i = 0; i < this.getDimension(); i++) {
+            elements[i] = this.get(i);
+        }
+
+        return elements;
+    }
+
     public Vector with(int index, Rational value) {
         return this.copy().set(index, value);
     }
@@ -216,7 +226,7 @@ public class Vector {
 
     @Override
     public int hashCode() {
-        return this.getDimension() * 31 + Arrays.hashCode(this.elements);
+        return this.getDimension() * 31 + Arrays.hashCode(this.getElements());
     }
 
     @Override
@@ -226,7 +236,7 @@ public class Vector {
         Vector vector = (Vector)other;
         if(this.getDimension() != vector.getDimension())return false;
 
-        for(int i = 0; i < this.elements.length; i++) {
+        for(int i = 0; i < this.getDimension(); i++) {
             if(this.get(i).compareTo(vector.get(i)) != 0)return false;
         }
 
@@ -235,27 +245,34 @@ public class Vector {
 
     @Override
     public String toString() {
-        return Arrays.toString(this.elements);
+        return Arrays.toString(this.getElements());
     }
 
     public static class View extends Vector {
-        private final Generator onGet;
-        private final Setter onSet;
+        private final int dimension;
+        private final Generator getter;
+        private final Setter setter;
 
-        public View(int dimension, Generator onGet, Setter onSet) {
-            super(dimension);
-            this.onGet = onGet;
-            this.onSet = onSet;
+        public View(int dimension, Generator getter, Setter setter) {
+            super((Rational[])null);
+            this.dimension = dimension;
+            this.getter = getter;
+            this.setter = setter;
+        }
+
+        @Override
+        public int getDimension() {
+            return this.dimension;
         }
 
         @Override
         public Rational get(int index) {
-            return this.onGet.getValue(index);
+            return this.getter.getValue(index);
         }
 
         @Override
         public Vector set(int index, Rational value) {
-            this.onSet.set(index, value);
+            this.setter.set(index, value);
             return this;
         }
 
