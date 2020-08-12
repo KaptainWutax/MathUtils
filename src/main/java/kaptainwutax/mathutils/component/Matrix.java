@@ -286,6 +286,14 @@ public class Matrix {
         return this.mapAndSet((row, column, oldValue) -> this.get(row, column).multiply(scalar));
     }
 
+    public Matrix divide(Rational scalar) {
+        return this.map((row, column, oldValue) -> this.get(row, column).divide(scalar));
+    }
+
+    public Matrix divideAndSet(Rational scalar) {
+        return this.mapAndSet((row, column, oldValue) -> this.get(row, column).divide(scalar));
+    }
+
     public Matrix copy() {
         return new Matrix(this.getRowCount(), this.getColumnCount(), this.toGenerator());
     }
