@@ -12,6 +12,10 @@ public final class Mth {
         return (value & -value) == value;
     }
 
+    public static boolean isPowerOf2(BigInteger value) {
+        return value.and(value.subtract(BigInteger.ONE)).equals(BigInteger.ZERO);
+    }
+
     public static long getPow2(int bits) {
         return 1L << bits;
     }
