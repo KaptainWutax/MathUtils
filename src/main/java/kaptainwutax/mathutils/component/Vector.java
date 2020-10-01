@@ -25,6 +25,14 @@ public class Vector {
         this.elements = elements;
     }
 
+    public Vector(BigInteger... elements) {
+        this(Arrays.stream(elements).map(Rational::new).toArray(Rational[]::new));
+    }
+
+    public Vector(long... elements) {
+        this(Arrays.stream(elements).mapToObj(Rational::new).toArray(Rational[]::new));
+    }
+
     public static Vector zero(int dimension) {
         return new Vector(dimension, i -> Rational.ZERO);
     }
@@ -111,7 +119,9 @@ public class Vector {
 
         for(int i = 0; i < this.getDimension(); i++) {
             Rational e = this.get(i);
-            sum = sum.add(p == 1 ? e : e.pow(p));
+            if(p == 1)sum = sum.add(e);
+            else if(p == 2)sum = sum.add(e.multiply(e));
+            else sum = sum.add(e.pow(p));
         }
 
         return sum;
@@ -212,12 +222,20 @@ public class Vector {
         return new Vector(this.getDimension(), index -> this.get(index).multiply(other.get(index))).sum();
     }
 
+    public Vector projectOnto(Vector other) {
+        return other.scale(this.gramSchmidtCoefficient(other));
+    }
+
     public Rational gramSchmidtCoefficient(Vector other) {
         return this.dot(other).divide(other.magnitudeSq());
     }
 
-    public Vector projectOnto(Vector other) {
-        return other.scale(this.gramSchmidtCoefficient(other));
+    public Matrix toMatrixRow() {
+        return new Matrix(1, this.getDimension(), (row, column) -> this.get(column));
+    }
+
+    public Matrix toMatrixColumn() {
+        return new Matrix(this.getDimension(), 1, (row, column) -> this.get(row));
     }
 
     public Vector copy() {

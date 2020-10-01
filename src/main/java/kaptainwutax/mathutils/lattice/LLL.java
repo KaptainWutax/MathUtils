@@ -11,20 +11,22 @@ public final class LLL {
     public static final Rational MIN_DELTA = new Rational(1, 4);
     public static final Rational MAX_DELTA = Rational.ONE;
 
+    public static final Rational DEFAULT_DELTA = new Rational(99, 100);
+
     public static boolean supports(Matrix basis) {
         return true;
     }
 
-    private static Matrix reduce(Matrix basis) {
+    public static Matrix reduce(Matrix basis) {
         return reduceAndSet(basis.copy());
     }
 
-    private static Matrix reduce(Matrix basis, Rational delta) {
+    public static Matrix reduce(Matrix basis, Rational delta) {
         return reduceAndSet(basis.copy(), delta);
     }
 
-    private static Matrix reduceAndSet(Matrix basis) {
-        return reduceAndSet(basis, new Rational(99, 100));
+    public static Matrix reduceAndSet(Matrix basis) {
+        return reduceAndSet(basis, DEFAULT_DELTA);
     }
 
     public static Matrix reduceAndSet(Matrix basis, Rational delta) {

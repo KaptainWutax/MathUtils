@@ -1,8 +1,7 @@
 package kaptainwutax.mathutils.component;
 
 import kaptainwutax.mathutils.arithmetic.Rational;
-
-import java.util.Arrays;
+import kaptainwutax.mathutils.decomposition.LUDecomposition;
 
 public class Matrix {
 
@@ -10,6 +9,10 @@ public class Matrix {
 
     protected Matrix(int rows, int columns) {
         this.elements = new Rational[rows][columns];
+    }
+
+    public Matrix(int size, Generator generator) {
+        this(size, size, generator);
     }
 
     public Matrix(int rows, int columns, Generator generator) {
@@ -26,12 +29,16 @@ public class Matrix {
         this(rows.length, rows[0].getDimension(), (row, column) -> rows[row].get(column));
     }
 
+    public Matrix(Rational[]... elements) {
+        this(elements.length, elements[0].length, (row, column) -> elements[row][column]);
+    }
+
     public static Matrix zero(int rows, int columns) {
         return new Matrix(rows, columns, (row, column) -> Rational.ZERO);
     }
 
     public static Matrix identity(int size) {
-        return new Matrix(size, size, (row, column) -> Rational.ONE);
+        return new Matrix(size, size, (row, column) -> row == column ? Rational.ONE : Rational.ZERO);
     }
 
     public int getRowCount() {
@@ -105,14 +112,6 @@ public class Matrix {
         return this;
     }
 
-    public Vector getRowCopy(int row) {
-        return new Vector(this.getColumnCount(), i -> this.get(row, i));
-    }
-
-    public Vector getColumnCopy(int column) {
-        return new Vector(this.getRowCount(), i -> this.get(i, column));
-    }
-
     public Vector.View getRow(int row) {
         return new Vector.View(this.getColumnCount(),
                 column -> this.get(row, column), (column, value) -> this.set(row, column, value));
@@ -121,6 +120,14 @@ public class Matrix {
     public Vector.View getColumn(int column) {
         return new Vector.View(this.getRowCount(),
                 row -> this.get(row, column), (row, value) -> this.set(row, column, value));
+    }
+
+    public Vector getRowCopy(int row) {
+        return new Vector(this.getColumnCount(), i -> this.get(row, i));
+    }
+
+    public Vector getColumnCopy(int column) {
+        return new Vector(this.getRowCount(), i -> this.get(i, column));
     }
 
     public Matrix setRow(int row, Vector value) {
@@ -207,7 +214,7 @@ public class Matrix {
     }
 
     public Matrix transpose() {
-        return this.map((row, column, oldValue) -> this.get(column, row));
+        return new Matrix(this.getColumnCount(), this.getRowCount(), (row, column) -> this.get(column, row));
     }
 
     public Matrix transposeAndSet() {
@@ -294,13 +301,58 @@ public class Matrix {
         return this.mapAndSet((row, column, oldValue) -> this.get(row, column).divide(scalar));
     }
 
+    public Matrix invert() {
+        return this.luDecompose().getInverse();
+    }
+
+    public Matrix invertAndSet() {
+        Matrix inverse = this.invert();
+        return this.mapAndSet((row, column, oldValue) -> inverse.get(row, column));
+    }
+
+    public Rational getDeterminant() {
+        return this.luDecompose().getDeterminant();
+    }
+
+    public LUDecomposition luDecompose() {
+        return new LUDecomposition(this);
+    }
+
+    public Matrix sub(int r1, int c1, int rowCount, int columnCount) {
+        return new Matrix.View(rowCount, columnCount,
+                (row, column) -> this.get(r1 + row, c1 + column),
+                (row, column, value) -> this.set(r1 + row, c1 + column, value));
+    }
+
+    public Matrix subCopy(int r1, int c1, int rowCount, int columnCount) {
+        return this.sub(r1, c1, rowCount, columnCount).copy();
+    }
+
+    public Matrix.Augmented mergeToAugmented(Matrix extra) {
+        if(this.getRowCount() != extra.getRowCount()) {
+            throw new UnsupportedOperationException("Merging two matrices with different row count");
+        }
+
+        return new Matrix.Augmented(this, extra);
+    }
+
+    public Matrix.Augmented splitToAugmented(int columnSplit) {
+        return new Matrix.Augmented(this, columnSplit);
+    }
+
     public Matrix copy() {
         return new Matrix(this.getRowCount(), this.getColumnCount(), this.toGenerator());
     }
 
     @Override
     public int hashCode() {
-        return this.getRowCount() * 961 + this.getColumnCount() * 31 + Arrays.hashCode(this.elements);
+        int result = 1;
+
+        for(int row = 0; row < this.getRowCount(); row++) {
+            result = 31 * result + this.getRow(row).hashCode();
+        }
+
+        return this.getRowCount() * 961 + this.getColumnCount() * 31 + result;
     }
 
     @Override
@@ -326,10 +378,108 @@ public class Matrix {
         Vector[] rows = this.getRows();
 
         for(int i = 0; i < rows.length; i++) {
-            sb.append(rows[i].toString()).append(i < rows.length - 1 ? ", " : "");
+            sb.append(rows[i].toString()).append(i < rows.length - 1 ? "\n" : "");
         }
 
         return sb.toString();
+    }
+
+    public static class View extends Matrix {
+        private final int rows;
+        private final int columns;
+        private final Generator getter;
+        private final View.Setter setter;
+
+        public View(int rows, int columns, Generator getter, Setter setter) {
+            super(0, 0);
+            this.rows = rows;
+            this.columns = columns;
+            this.getter = getter;
+            this.setter = setter;
+        }
+
+        @Override
+        public int getRowCount() {
+            return this.rows;
+        }
+
+        @Override
+        public int getColumnCount() {
+            return this.columns;
+        }
+
+        @Override
+        public Rational get(int row, int column) {
+            return this.getter.getValue(row, column);
+        }
+
+        @Override
+        public Matrix set(int row, int column, Rational value) {
+            this.setter.set(row, column, value);
+            return this;
+        }
+
+        @FunctionalInterface
+        public interface Setter {
+            void set(int row, int column, Rational value);
+        }
+    }
+
+    public static class Augmented extends Matrix {
+        private final Matrix base;
+        private final Matrix extra;
+        private final int split;
+
+        public Augmented(Matrix base, Matrix extra) {
+            super(0, 0);
+            this.base = base;
+            this.extra = extra;
+            this.split = base.getColumnCount();
+        }
+
+        public Augmented(Matrix merged, int split) {
+            this(merged.sub(0, 0, merged.getRowCount() - 1, split - 1),
+                    merged.sub(0, 0, merged.getRowCount() - 1, split - 1));
+        }
+
+        public Matrix getBaseMatrix() {
+            return this.base;
+        }
+
+        public Matrix getExtraMatrix() {
+            return this.extra;
+        }
+
+        public int getSplit() {
+            return this.split;
+        }
+
+        @Override
+        public int getRowCount() {
+            return this.getBaseMatrix().getRowCount();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return this.getBaseMatrix().getColumnCount() + this.getExtraMatrix().getColumnCount();
+        }
+
+        @Override
+        public Rational get(int row, int column) {
+            return column < this.getSplit() ? this.getBaseMatrix().get(row, column)
+                    : this.getExtraMatrix().get(row, column - this.getSplit());
+        }
+
+        @Override
+        public Matrix set(int row, int column, Rational value) {
+            if(column < this.getSplit()) {
+                this.getBaseMatrix().set(row, column, value);
+            } else {
+                this.getExtraMatrix().set(row, column - this.getSplit(), value);
+            }
+
+            return this;
+        }
     }
 
     @FunctionalInterface

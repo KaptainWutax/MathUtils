@@ -1,11 +1,13 @@
 package kaptainwutax.mathutils.util;
 
 import java.math.BigInteger;
+import java.util.function.BiFunction;
 
 public final class Mth {
 
-    public static final long MASK_16 = getMask(16);
-    public static final long MASK_32 = getMask(32);
+    public static final int MASK_8 = (int)getMask(8);
+    public static final int MASK_16 = (int)getMask(16);
+    public static final int MASK_32 = (int)getMask(32);
     public static final long MASK_48 = getMask(48);
 
     public static boolean isPowerOf2(long value) {
@@ -50,12 +52,10 @@ public final class Mth {
 
     public static long modInverse(long value, int k) {
         long x = ((((value << 1) ^ value) & 4) << 1) ^ value;
-
         x += x - value * x * x;
         x += x - value * x * x;
         x += x - value * x * x;
         x += x - value * x * x;
-
         return mask(x, k);
     }
 

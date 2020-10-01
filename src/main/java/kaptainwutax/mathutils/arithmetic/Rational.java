@@ -61,7 +61,7 @@ public class Rational extends Number implements Comparable<Rational> {
         return this.reduce();
     }
 
-    public Rational reduce() {
+    protected Rational reduce() {
         BigInteger gcd = this.numerator.gcd(this.denominator);
         this.numerator = this.numerator.divide(gcd);
         this.denominator = this.denominator.divide(gcd);
@@ -216,10 +216,6 @@ public class Rational extends Number implements Comparable<Rational> {
         return this.getNumerator().divide(this.getDenominator());
     }
 
-    public BigDecimal toBigDecimal() {
-        return this.toBigDecimal(4, RoundingMode.HALF_UP);
-    }
-
     public BigDecimal toBigDecimal(int scale, RoundingMode roundingMode) {
         return new BigDecimal(this.getNumerator()).setScale(scale, roundingMode)
                 .divide(new BigDecimal(this.getDenominator()), roundingMode);
@@ -271,7 +267,11 @@ public class Rational extends Number implements Comparable<Rational> {
 
     @Override
     public String toString() {
-        return this.toBigDecimal().toString();
+        return this.toString(10);
+    }
+
+    public String toString(int scale) {
+        return this.toBigDecimal(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
     }
 
 }
