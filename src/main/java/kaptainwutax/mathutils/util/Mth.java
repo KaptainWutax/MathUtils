@@ -98,7 +98,7 @@ public final class Mth {
         return min;
     }
 
-    public static <T extends Comparable<T>> T min(T... values) {
+    public static <T extends Comparable<T>> T getMin(T... values) {
         T min = values[0];
 
         for(int i = 1; i < values.length; i++) {
@@ -148,7 +148,7 @@ public final class Mth {
         return max;
     }
 
-    public static <T extends Comparable<T>> T max(T... values) {
+    public static <T extends Comparable<T>> T getMax(T... values) {
         T max = values[0];
 
         for(int i = 1; i < values.length; i++) {
