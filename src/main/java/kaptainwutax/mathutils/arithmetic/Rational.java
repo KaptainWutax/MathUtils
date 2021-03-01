@@ -7,16 +7,16 @@ import java.math.RoundingMode;
 
 public class Rational extends Number implements Comparable<Rational> {
 
-    public static final BigInteger THRESHOLD = BigInteger.ONE.shiftLeft(128);
+    protected static final BigInteger THRESHOLD = BigInteger.ONE.shiftLeft(128);
 
-    public static final Rational ZERO = new Rational(0, 1);
-    public static final Rational HALF = new Rational(1, 2);
-    public static final Rational ONE = new Rational(1, 1);
+    public static final Rational ZERO = Rational.of(0, 1);
+    public static final Rational HALF = Rational.of(1, 2);
+    public static final Rational ONE = Rational.of(1, 1);
 
     protected BigInteger numerator;
     protected BigInteger denominator;
 
-    public Rational(BigInteger numerator, BigInteger denominator) {
+    protected Rational(BigInteger numerator, BigInteger denominator) {
         if(denominator.signum() == 0) {
             throw new ArithmeticException("/ by zero");
         }
@@ -24,18 +24,6 @@ public class Rational extends Number implements Comparable<Rational> {
         this.numerator = numerator;
         this.denominator = denominator;
         this.simplify();
-    }
-
-    public Rational(long numerator, long denominator) {
-        this(BigInteger.valueOf(numerator), BigInteger.valueOf(denominator));
-    }
-
-    public Rational(BigInteger value) {
-        this(value, BigInteger.ONE);
-    }
-
-    public Rational(long value) {
-        this(value, 1);
     }
 
     public BigInteger getNumerator() {
@@ -71,19 +59,19 @@ public class Rational extends Number implements Comparable<Rational> {
     public Rational abs() {
         return this.getNumerator().signum() < 0 ? this.negate() : this;
     }
-
+    
     public Rational negate() {
-        return new Rational(this.getNumerator().negate(), this.getDenominator());
+        return Rational.of(this.getNumerator().negate(), this.getDenominator());
     }
-
+    
     public Rational invert() {
-        return new Rational(this.getDenominator(), this.getNumerator());
+        return Rational.of(this.getDenominator(), this.getNumerator());
     }
 
     public int signum() {
         return this.getNumerator().signum();
     }
-
+    
     public Rational min(Rational other) {
         return this.compareTo(other) <= 0 ? this : other;
     }
@@ -95,13 +83,21 @@ public class Rational extends Number implements Comparable<Rational> {
     public Rational add(Rational addend) {
         BigInteger a = this.getNumerator().multiply(addend.getDenominator());
         BigInteger b = addend.getNumerator().multiply(this.getDenominator());
-        return new Rational(a.add(b), this.getDenominator().multiply(addend.getDenominator()));
+        return Rational.of(a.add(b), this.getDenominator().multiply(addend.getDenominator()));
+    }
+    
+    public Rational add(BigDecimal addend) {
+        return this.add(Rational.of(addend));
     }
 
     public Rational add(BigInteger addend) {
-        return new Rational(this.getNumerator().add(addend.multiply(this.getDenominator())), this.getDenominator());
+        return Rational.of(this.getNumerator().add(addend.multiply(this.getDenominator())), this.getDenominator());
     }
-
+    
+    public Rational add(double addend) {
+        return this.add(Rational.of(addend));
+    }
+    
     public Rational add(long addend) {
         return this.add(BigInteger.valueOf(addend));
     }
@@ -109,64 +105,88 @@ public class Rational extends Number implements Comparable<Rational> {
     public Rational subtract(Rational subtrahend) {
         return this.add(subtrahend.negate());
     }
+    
+    public Rational subtract(BigDecimal subtrahend) {
+        return this.subtract(Rational.of(subtrahend));
+    }
 
     public Rational subtract(BigInteger subtrahend) {
         return this.add(subtrahend.negate());
+    }
+    
+    public Rational subtract(double subtrahend) {
+        return this.subtract(Rational.of(subtrahend));
     }
 
     public Rational subtract(long subtrahend) {
         return this.subtract(BigInteger.valueOf(subtrahend));
     }
 
-    public Rational multiply(Rational factor) {
-        BigInteger a = this.getNumerator().multiply(factor.getNumerator());
-        BigInteger b = this.getDenominator().multiply(factor.getDenominator());
-        return new Rational(a, b);
+    public Rational multiply(Rational multiplier) {
+        BigInteger a = this.getNumerator().multiply(multiplier.getNumerator());
+        BigInteger b = this.getDenominator().multiply(multiplier.getDenominator());
+        return Rational.of(a, b);
     }
 
-    public Rational multiply(BigInteger factor) {
-        return new Rational(this.getNumerator().multiply(factor), this.getDenominator());
+    public Rational multiply(BigDecimal multiplier) {
+        return this.multiply(Rational.of(multiplier));
     }
 
-    public Rational multiply(long factor) {
-        return this.multiply(BigInteger.valueOf(factor));
+    public Rational multiply(BigInteger multiplier) {
+        return Rational.of(this.getNumerator().multiply(multiplier), this.getDenominator());
+    }
+
+    public Rational multiply(double multiplier) {
+        return this.multiply(Rational.of(multiplier));
+    }
+    
+    public Rational multiply(long multiplier) {
+        return this.multiply(BigInteger.valueOf(multiplier));
     }
 
     public Rational divide(Rational divisor) {
         return this.multiply(divisor.invert());
     }
 
-    public Rational divide(BigInteger divisor) {
-        return new Rational(this.getNumerator(), this.getDenominator().multiply(divisor));
+    public Rational divide(BigDecimal divisor) {
+        return this.divide(Rational.of(divisor));
     }
 
+    public Rational divide(BigInteger divisor) {
+        return Rational.of(this.getNumerator(), this.getDenominator().multiply(divisor));
+    }
+    
+    public Rational divide(double divisor) {
+        return this.divide(Rational.of(divisor));
+    }
+    
     public Rational divide(long divisor) {
         return this.divide(BigInteger.valueOf(divisor));
     }
-
-    public Rational pow(long exponent) {
-        BigInteger a = this.getNumerator().pow(Math.toIntExact(exponent));
-        BigInteger b = this.getDenominator().pow(Math.toIntExact(exponent));
-        return new Rational(a, b);
-    }
-
+    
     public Rational pow(BigInteger exponent) {
-        return this.pow(exponent.longValueExact());
+        return this.pow(exponent.intValueExact());
+    }
+    
+    public Rational pow(int exponent) {
+        BigInteger a = this.getNumerator().pow(exponent);
+        BigInteger b = this.getDenominator().pow(exponent);
+        return Rational.of(a, b);
     }
 
     public Rational shiftRight(int n) {
         Rational r = this;
         int i = Math.min(this.getNumerator().getLowestSetBit(), n);
-        if(i > 0)r = new Rational(this.getNumerator().shiftRight(i), this.getDenominator());
-        if(n - i > 0)r = new Rational(r.getNumerator(), r.getDenominator().shiftLeft(n - i));
+        if(i > 0)r = Rational.of(this.getNumerator().shiftRight(i), this.getDenominator());
+        if(n - i > 0)r = Rational.of(r.getNumerator(), r.getDenominator().shiftLeft(n - i));
         return r;
     }
 
     public Rational shiftLeft(int n) {
         Rational r = this;
         int i = Math.min(this.getDenominator().getLowestSetBit(), n);
-        if(i > 0)r = new Rational(this.getNumerator(), this.getDenominator().shiftRight(i));
-        if(n - i > 0)r = new Rational(r.getNumerator().shiftLeft(n - i), r.getDenominator());
+        if(i > 0)r = Rational.of(this.getNumerator(), this.getDenominator().shiftRight(i));
+        if(n - i > 0)r = Rational.of(r.getNumerator().shiftLeft(n - i), r.getDenominator());
         return r;
     }
 
@@ -174,14 +194,14 @@ public class Rational extends Number implements Comparable<Rational> {
         if(this.getDenominator().equals(BigInteger.ONE))return this;
         BigInteger a = this.getNumerator().divide(this.getDenominator());
         if(this.getNumerator().signum() < 0)a = a.subtract(BigInteger.ONE);
-        return new Rational(a);
+        return Rational.of(a);
     }
 
     public Rational ceil() {
         if(this.getDenominator().equals(BigInteger.ONE))return this;
         BigInteger a = this.getNumerator().divide(this.getDenominator());
         if(this.getNumerator().signum() < 0)a = a.add(BigInteger.ONE);
-        return new Rational(a);
+        return Rational.of(a);
     }
 
     public Rational round() {
@@ -221,29 +241,8 @@ public class Rational extends Number implements Comparable<Rational> {
                 .divide(new BigDecimal(this.getDenominator()), roundingMode);
     }
 
-    public BigDecimal toBigDecimal(int scale, MathContext mathContext) {
-        return new BigDecimal(this.getNumerator()).setScale(scale, RoundingMode.HALF_UP)
-                .divide(new BigDecimal(this.getDenominator()), mathContext);
-    }
-
-    public static Rational min(Rational... values) {
-        Rational min = values[0];
-
-        for(int i = 1; i < values.length; i++) {
-            min = min.min(values[i]);
-        }
-
-        return min;
-    }
-
-    public static Rational max(Rational... values) {
-        Rational max = values[0];
-
-        for(int i = 1; i < values.length; i++) {
-            max = max.max(values[i]);
-        }
-
-        return max;
+    public Real toReal(int scale, RoundingMode roundingMode) {
+        return Real.of(this.toBigDecimal(scale, roundingMode));
     }
 
     @Override
@@ -267,11 +266,46 @@ public class Rational extends Number implements Comparable<Rational> {
 
     @Override
     public String toString() {
-        return this.toString(10);
+        Rational r = this.reduce();
+        return r.signum() == 0 || r.getDenominator().equals(BigInteger.ONE)
+                ? r.getNumerator().toString() : r.getNumerator() + " / " + r.getDenominator();
     }
 
     public String toString(int scale) {
         return this.toBigDecimal(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+    }
+
+    public static Rational of(BigInteger numerator, BigInteger denominator) {
+        return new Rational(numerator, denominator);
+    }
+
+    public static Rational of(long numerator, long denominator) {
+        return of(BigInteger.valueOf(numerator), BigInteger.valueOf(denominator));
+    }
+
+    public static Rational of(BigInteger numerator, long denominator) {
+        return of(numerator, BigInteger.valueOf(denominator));
+    }
+
+    public static Rational of(long numerator, BigInteger denominator) {
+        return of(BigInteger.valueOf(numerator), denominator);
+    }
+
+    public static Rational of(BigDecimal value) {
+        value = value.stripTrailingZeros();
+        return of(value.movePointRight(value.scale()).toBigIntegerExact(), BigInteger.TEN.pow(value.scale()));
+    }
+
+    public static Rational of(BigInteger value) {
+        return of(value, BigInteger.ONE);
+    }
+
+    public static Rational of(double value) {
+        return of(BigDecimal.valueOf(value));
+    }
+
+    public static Rational of(long value) {
+        return of(value, 1);
     }
 
 }

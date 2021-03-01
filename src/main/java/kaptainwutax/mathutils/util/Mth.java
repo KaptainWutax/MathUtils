@@ -1,13 +1,12 @@
 package kaptainwutax.mathutils.util;
 
 import java.math.BigInteger;
-import java.util.function.BiFunction;
 
 public final class Mth {
 
     public static final int MASK_8 = (int)getMask(8);
     public static final int MASK_16 = (int)getMask(16);
-    public static final int MASK_32 = (int)getMask(32);
+    public static final long MASK_32 = getMask(32);
     public static final long MASK_48 = getMask(48);
 
     public static boolean isPowerOf2(long value) {
@@ -99,6 +98,16 @@ public final class Mth {
         return min;
     }
 
+    public static <T extends Comparable<T>> T min(T... values) {
+        T min = values[0];
+
+        for(int i = 1; i < values.length; i++) {
+            min = min.compareTo(values[i]) <= 0 ? min : values[i];
+        }
+
+        return min;
+    }
+
     public static int max(int... values) {
         int max = values[0];
 
@@ -139,6 +148,16 @@ public final class Mth {
         return max;
     }
 
+    public static <T extends Comparable<T>> T max(T... values) {
+        T max = values[0];
+
+        for(int i = 1; i < values.length; i++) {
+            max = max.compareTo(values[i]) >= 0 ? max : values[i];
+        }
+
+        return max;
+    }
+
     public static int clamp(int value, int min, int max) {
         if(value < min)return min;
         return Math.min(value, max);
@@ -157,6 +176,11 @@ public final class Mth {
     public static double clamp(double value, double min, double max) {
         if(value < min)return min;
         return Math.min(value, max);
+    }
+
+    public static <T extends Comparable<T>> T clamp(T value, T min, T max) {
+        if(value.compareTo(min) < 0)return min;
+        return value.compareTo(max) <= 0 ? value : max;
     }
 
 }

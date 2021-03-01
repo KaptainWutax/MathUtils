@@ -1,19 +1,42 @@
-package kaptainwutax.mathutils.component;
+package kaptainwutax.mathutils.component.vector;
 
 import kaptainwutax.mathutils.arithmetic.Rational;
+import kaptainwutax.mathutils.arithmetic.Real;
+import kaptainwutax.mathutils.component.Norm;
+import kaptainwutax.mathutils.component.matrix.QMatrix;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 
-public class Vector {
+public class QVector {
+
+    public static final Norm<QVector, Rational> SUM = v -> {
+        Rational sum = Rational.ZERO;
+
+        for(int i = 0; i < v.getDimension(); i++) {
+            sum = sum.add(v.get(i));
+        }
+
+        return sum;
+    };
+
+    public static final Norm<QVector, Rational> EUCLIDEAN_SQ = v -> {
+        Rational sum = Rational.ZERO;
+
+        for(int i = 0; i < v.getDimension(); i++) {
+            sum = sum.add(v.get(i).multiply(v.get(i)));
+        }
+
+        return sum;
+    };
 
     private final Rational[] elements;
 
-    protected Vector(int dimension) {
+    protected QVector(int dimension) {
         this.elements = new Rational[dimension];
     }
 
-    public Vector(int dimension, Generator generator) {
+    public QVector(int dimension, Generator generator) {
         this(dimension);
 
         for(int i = 0; i < this.elements.length; i++) {
@@ -21,36 +44,36 @@ public class Vector {
         }
     }
 
-    public Vector(Rational... elements) {
+    public QVector(Rational... elements) {
         this.elements = elements;
     }
 
-    public Vector(BigInteger... elements) {
-        this(Arrays.stream(elements).map(Rational::new).toArray(Rational[]::new));
+    public QVector(BigInteger... elements) {
+        this(Arrays.stream(elements).map(Rational::of).toArray(Rational[]::new));
     }
 
-    public Vector(long... elements) {
-        this(Arrays.stream(elements).mapToObj(Rational::new).toArray(Rational[]::new));
+    public QVector(long... elements) {
+        this(Arrays.stream(elements).mapToObj(Rational::of).toArray(Rational[]::new));
     }
 
-    public static Vector zero(int dimension) {
-        return new Vector(dimension, i -> Rational.ZERO);
+    public static QVector zero(int dimension) {
+        return new QVector(dimension, i -> Rational.ZERO);
     }
 
-    public static Vector basis(int dimension, int index) {
+    public static QVector basis(int dimension, int index) {
         return basis(dimension, index, Rational.ONE);
     }
 
-    public static Vector basis(int dimension, int index, Rational scale) {
-        return new Vector(dimension, i -> i == index ? scale : Rational.ZERO);
+    public static QVector basis(int dimension, int index, Rational scale) {
+        return new QVector(dimension, i -> i == index ? scale : Rational.ZERO);
     }
 
-    public static Vector basis(int dimension, int index, BigInteger scale) {
-        return basis(dimension, index, new Rational(scale));
+    public static QVector basis(int dimension, int index, BigInteger scale) {
+        return basis(dimension, index, Rational.of(scale));
     }
 
-    public static Vector basis(int dimension, int index, long scale) {
-        return basis(dimension, index, new Rational(scale));
+    public static QVector basis(int dimension, int index, long scale) {
+        return basis(dimension, index, Rational.of(scale));
     }
 
     public int getDimension() {
@@ -69,7 +92,7 @@ public class Vector {
         return this.elements[index];
     }
 
-    public Vector set(int index, Rational value) {
+    public QVector set(int index, Rational value) {
         this.elements[index] = value;
         return this;
     }
@@ -84,15 +107,15 @@ public class Vector {
         return elements;
     }
 
-    public Vector with(int index, Rational value) {
+    public QVector with(int index, Rational value) {
         return this.copy().set(index, value);
     }
 
-    public Vector map(Mapper mapper) {
-        return new Vector(this.getDimension(), index -> mapper.getNewValue(index, this.get(index)));
+    public QVector map(Mapper mapper) {
+        return new QVector(this.getDimension(), index -> mapper.getNewValue(index, this.get(index)));
     }
 
-    public Vector mapAndSet(Mapper mapper) {
+    public QVector mapAndSet(Mapper mapper) {
         for(int i = 0; i < this.getDimension(); i++) {
             this.set(i, mapper.getNewValue(i, this.get(i)));
         }
@@ -100,18 +123,22 @@ public class Vector {
         return this;
     }
 
-    protected void checkDimension(Vector other) {
+    protected void checkDimension(QVector other) {
         if(this.getDimension() != other.getDimension()) {
             throw new IllegalArgumentException("vectors don't have the same size");
         }
     }
 
+    public Rational norm(Norm<QVector, Rational> norm) {
+        return norm.get(this);
+    }
+
     public Rational sum() {
-        return this.raisedNorm(1);
+        return this.norm(SUM);
     }
 
     public Rational magnitudeSq() {
-        return this.raisedNorm(2);
+        return this.norm(EUCLIDEAN_SQ);
     }
 
     public Rational raisedNorm(int p) {
@@ -127,119 +154,147 @@ public class Vector {
         return sum;
     }
 
-    public Vector swap(int i, int j) {
+    public QVector normalize(Norm<QVector, Rational> norm) {
+        Rational magnitude = norm.get(this);
+        return magnitude.equals(Real.ZERO) ? this.copy() : this.map((index, oldValue) -> oldValue.divide(magnitude));
+    }
+
+    public QVector normalizeAndSet(Norm<QVector, Rational> norm) {
+        Rational magnitude = norm.get(this);
+        return magnitude.equals(Real.ZERO) ? this : this.mapAndSet((index, oldValue) -> oldValue.divide(magnitude));
+    }
+
+    public QVector swap(int i, int j) {
         return this.copy().set(i, this.get(j)).set(j, this.get(i));
     }
 
-    public Vector swapAndSet(int i, int j) {
+    public QVector swapAndSet(int i, int j) {
         Rational oldValue = this.get(i);
         return this.set(i, this.get(j)).set(j, oldValue);
     }
 
-    public Vector add(Vector other) {
+    public QVector add(QVector other) {
         this.checkDimension(other);
         return this.map((index, oldValue) -> oldValue.add(other.get(index)));
     }
 
-    public Vector addAndSet(Vector other) {
+    public QVector addAndSet(QVector other) {
         this.checkDimension(other);
         return this.mapAndSet((index, oldValue) -> oldValue.add(other.get(index)));
     }
 
-    public Vector subtract(Vector other) {
+    public QVector subtract(QVector other) {
         this.checkDimension(other);
         return this.map((index, oldValue) -> oldValue.subtract(other.get(index)));
     }
 
-    public Vector subtractAndSet(Vector other) {
+    public QVector subtractAndSet(QVector other) {
         this.checkDimension(other);
         return this.mapAndSet((index, oldValue) -> oldValue.subtract(other.get(index)));
     }
 
-    public Vector scale(Rational scalar) {
+    public QVector scale(Rational scalar) {
         return this.map((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector scaleAndSet(Rational scalar) {
+    public QVector scaleAndSet(Rational scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector scale(BigInteger scalar) {
+    public QVector scale(BigInteger scalar) {
         return this.map((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector scaleAndSet(BigInteger scalar) {
+    public QVector scaleAndSet(BigInteger scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector scale(long scalar) {
+    public QVector scale(long scalar) {
         return this.map((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector scaleAndSet(long scalar) {
+    public QVector scaleAndSet(long scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.multiply(scalar));
     }
 
-    public Vector multiply(Matrix matrix) {
-        if(matrix.getColumnCount() != this.getDimension()) {
+    public QVector multiply(QMatrix matrix) {
+        if(matrix.getRowCount() != this.getDimension()) {
             throw new IllegalArgumentException("Vector length should equal the number of matrix columns");
         }
 
-        return new Vector(this.getDimension(), i -> this.dot(matrix.getColumnCopy(i)));
+        return new QVector(this.getDimension(), i -> this.dot(matrix.getRow(i)));
     }
 
-    public Vector multiplyAndSet(Matrix matrix) {
-        if(matrix.getColumnCount() != this.getDimension()) {
+    public QVector multiplyAndSet(QMatrix matrix) {
+        if(matrix.getRowCount() != this.getDimension()) {
             throw new IllegalArgumentException("Vector length should equal the number of matrix columns");
         }
 
-        Vector original = this.copy();
-        return this.mapAndSet((index, oldValue) -> original.dot(matrix.getColumnCopy(index)));
+        QVector original = this.copy();
+        return this.mapAndSet((index, oldValue) -> original.dot(matrix.getRow(index)));
     }
 
-    public Vector divide(Rational scalar) {
+    public QVector divide(Rational scalar) {
         return this.map((index, oldValue) -> oldValue.divide(scalar));
     }
 
-    public Vector divideAndSet(Rational scalar) {
+    public QVector divideAndSet(Rational scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.divide(scalar));
     }
 
-    public Vector divide(BigInteger scalar) {
+    public QVector divide(BigInteger scalar) {
         return this.map((index, oldValue) -> oldValue.divide(scalar));
     }
 
-    public Vector divideAndSet(BigInteger scalar) {
+    public QVector divideAndSet(BigInteger scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.divide(scalar));
     }
 
-    public Vector divideAndSet(long scalar) {
+    public QVector divideAndSet(long scalar) {
         return this.mapAndSet((index, oldValue) -> oldValue.divide(scalar));
     }
 
-    public Rational dot(Vector other) {
+    public Rational dot(QVector other) {
         this.checkDimension(other);
-        return new Vector(this.getDimension(), index -> this.get(index).multiply(other.get(index))).sum();
+        return new QVector(this.getDimension(), index -> this.get(index).multiply(other.get(index))).sum();
     }
 
-    public Vector projectOnto(Vector other) {
+    public QVector projectOnto(QVector other) {
         return other.scale(this.gramSchmidtCoefficient(other));
     }
 
-    public Rational gramSchmidtCoefficient(Vector other) {
+    public QVector projectOnto(QMatrix other) {
+        QMatrix transposed = other.transpose();
+        return this.multiply(other.multiply(transposed.multiply(other).invert()).multiply(transposed));
+    }
+
+    public Rational gramSchmidtCoefficient(QVector other) {
         return this.dot(other).divide(other.magnitudeSq());
     }
 
-    public Matrix toMatrixRow() {
-        return new Matrix(1, this.getDimension(), (row, column) -> this.get(column));
+    public QVector tensor(QVector other) {
+        QVector res = new QVector(this.getDimension() * other.getDimension());
+
+        for(int i = 0; i < this.getDimension(); i++) {
+            for(int j = 0; j < other.getDimension(); j++) {
+                int id = i * other.getDimension() + j;
+                res.set(id, this.get(i).multiply(other.get(j)));
+            }
+        }
+
+        return res;
     }
 
-    public Matrix toMatrixColumn() {
-        return new Matrix(this.getDimension(), 1, (row, column) -> this.get(row));
+    public QMatrix toMatrixRow() {
+        return new QMatrix(1, this.getDimension(), (row, column) -> this.get(column));
     }
 
-    public Vector copy() {
-        return new Vector(this.getDimension(), this.toGenerator());
+    public QMatrix toMatrixColumn() {
+        return new QMatrix(this.getDimension(), 1, (row, column) -> this.get(row));
+    }
+
+    public QVector copy() {
+        return new QVector(this.getDimension(), this.toGenerator());
     }
 
     @Override
@@ -250,12 +305,12 @@ public class Vector {
     @Override
     public boolean equals(Object other) {
         if(this == other)return true;
-        if(!(other instanceof Vector))return false;
-        Vector vector = (Vector)other;
+        if(!(other instanceof QVector))return false;
+        QVector vector = (QVector)other;
         if(this.getDimension() != vector.getDimension())return false;
 
         for(int i = 0; i < this.getDimension(); i++) {
-            if(this.get(i).compareTo(vector.get(i)) != 0)return false;
+            if(!this.get(i).equals(vector.get(i)))return false;
         }
 
         return true;
@@ -266,7 +321,7 @@ public class Vector {
         return Arrays.toString(this.getElements());
     }
 
-    public static class View extends Vector {
+    public static class View extends QVector {
         private final int dimension;
         private final Generator getter;
         private final Setter setter;
@@ -289,7 +344,7 @@ public class Vector {
         }
 
         @Override
-        public Vector set(int index, Rational value) {
+        public QVector set(int index, Rational value) {
             this.setter.set(index, value);
             return this;
         }

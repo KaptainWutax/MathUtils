@@ -1,20 +1,20 @@
 package kaptainwutax.mathutils.solver;
 
 import kaptainwutax.mathutils.arithmetic.Rational;
-import kaptainwutax.mathutils.component.Matrix;
-import kaptainwutax.mathutils.component.Vector;
+import kaptainwutax.mathutils.component.matrix.QMatrix;
+import kaptainwutax.mathutils.component.vector.QVector;
 
 public class GaussJordan {
 
-	public static Matrix solve(Matrix.Augmented matrix, Phase phase) {
+	public static QMatrix solve(QMatrix.Augmented matrix, Phase phase) {
 		return solveInternal(matrix.copy(), matrix.getSplit(), phase == Phase.REDUCED);
 	}
 
-	public static Matrix solveAndSet(Matrix.Augmented matrix, Phase phase) {
+	public static QMatrix solveAndSet(QMatrix.Augmented matrix, Phase phase) {
 		return solveInternal(matrix, matrix.getSplit(), phase == Phase.REDUCED);
 	}
 
-	private static Matrix solveInternal(Matrix matrix, int split, boolean reduced) {
+	private static QMatrix solveInternal(QMatrix matrix, int split, boolean reduced) {
 		int row = 0, column = 0;
 		int[] pivots = new int[split];
 
@@ -39,7 +39,7 @@ public class GaussJordan {
 				continue;
 			}
 
-			Vector main = matrix.getRow(row);
+			QVector main = matrix.getRow(row);
 			main.scaleAndSet(Rational.ONE.divide(main.get(column)));
 
 			for(int i = row + 1; i < matrix.getRowCount(); i++) {
@@ -57,7 +57,7 @@ public class GaussJordan {
 				int pivot = pivots[columnPivot];
 				if(pivot == -1)continue;
 
-				Vector main = matrix.getRow(pivot);
+				QVector main = matrix.getRow(pivot);
 
 				for(int i = 0; i < pivot; i++) {
 					Rational value = matrix.get(i, columnPivot);

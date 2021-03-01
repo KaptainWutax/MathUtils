@@ -2,7 +2,7 @@ package kaptainwutax.mathutils.arithmetic;
 
 import java.util.Arrays;
 
-public final class Polynomial {
+public class Polynomial {
 
 	protected final Rational[] coefficients;
 	protected int degree = -1;

@@ -1,21 +1,23 @@
-package kaptainwutax.mathutils.component;
+package kaptainwutax.mathutils.component.matrix;
 
-import kaptainwutax.mathutils.arithmetic.Rational;
+import kaptainwutax.mathutils.arithmetic.Real;
+import kaptainwutax.mathutils.component.vector.CVector;
+import kaptainwutax.mathutils.component.vector.RVector;
 import kaptainwutax.mathutils.decomposition.LUDecomposition;
 
-public class Matrix {
+public class RMatrix {
 
-    private final Rational[][] elements;
+    private final Real[][] elements;
 
-    protected Matrix(int rows, int columns) {
-        this.elements = new Rational[rows][columns];
+    protected RMatrix(int rows, int columns) {
+        this.elements = new Real[rows][columns];
     }
 
-    public Matrix(int size, Generator generator) {
+    public RMatrix(int size, Generator generator) {
         this(size, size, generator);
     }
 
-    public Matrix(int rows, int columns, Generator generator) {
+    public RMatrix(int rows, int columns, Generator generator) {
         this(rows, columns);
 
         for(int row = 0; row < rows; row++) {
@@ -25,20 +27,20 @@ public class Matrix {
         }
     }
 
-    public Matrix(Vector... rows) {
+    public RMatrix(RVector... rows) {
         this(rows.length, rows[0].getDimension(), (row, column) -> rows[row].get(column));
     }
 
-    public Matrix(Rational[]... elements) {
+    public RMatrix(Real[]... elements) {
         this(elements.length, elements[0].length, (row, column) -> elements[row][column]);
     }
 
-    public static Matrix zero(int rows, int columns) {
-        return new Matrix(rows, columns, (row, column) -> Rational.ZERO);
+    public static RMatrix zero(int rows, int columns) {
+        return new RMatrix(rows, columns, (row, column) -> Real.ZERO);
     }
 
-    public static Matrix identity(int size) {
-        return new Matrix(size, size, (row, column) -> row == column ? Rational.ONE : Rational.ZERO);
+    public static RMatrix identity(int size) {
+        return new RMatrix(size, size, (row, column) -> row == column ? Real.ONE : Real.ZERO);
     }
 
     public int getRowCount() {
@@ -61,24 +63,24 @@ public class Matrix {
         return this.toGenerator().asMapper();
     }
 
-    public Rational get(int row, int column) {
+    public Real get(int row, int column) {
         return this.elements[row][column];
     }
 
-    public Matrix set(int row, int column, Rational value) {
+    public RMatrix set(int row, int column, Real value) {
         this.elements[row][column] = value;
         return this;
     }
 
-    public Matrix with(int row, int column, Rational value) {
+    public RMatrix with(int row, int column, Real value) {
         return this.copy().set(row, column, value);
     }
 
-    public Matrix map(Mapper mapper) {
-        return new Matrix(this.getRowCount(), this.getColumnCount(), (row, column) -> mapper.getNewValue(row, column, this.get(row, column)));
+    public RMatrix map(Mapper mapper) {
+        return new RMatrix(this.getRowCount(), this.getColumnCount(), (row, column) -> mapper.getNewValue(row, column, this.get(row, column)));
     }
 
-    public Matrix mapAndSet(Mapper mapper) {
+    public RMatrix mapAndSet(Mapper mapper) {
         for(int row = 0; row < this.getRowCount(); row++) {
             for(int column = 0; column < this.getColumnCount(); column++) {
                 this.set(row, column, mapper.getNewValue(row, column, this.get(row, column)));
@@ -88,11 +90,11 @@ public class Matrix {
         return this;
    }
 
-   public Matrix mapRow(int row, Vector.Mapper mapper) {
-       return new Matrix(this.getRowCount(), this.getColumnCount(), (row1, column) -> row == row1 ? mapper.getNewValue(column, this.get(row, column)) : this.get(row1, column));
+   public RMatrix mapRow(int row, RVector.Mapper mapper) {
+       return new RMatrix(this.getRowCount(), this.getColumnCount(), (row1, column) -> row == row1 ? mapper.getNewValue(column, this.get(row, column)) : this.get(row1, column));
    }
 
-   public Matrix mapRowAndSet(int row, Vector.Mapper mapper) {
+   public RMatrix mapRowAndSet(int row, RVector.Mapper mapper) {
        for(int column = 0; column < this.getColumnCount(); column++) {
            this.set(row, column, mapper.getNewValue(column, this.get(row, column)));
        }
@@ -100,11 +102,11 @@ public class Matrix {
        return this;
    }
 
-    public Matrix mapColumn(int column, Vector.Mapper mapper) {
-        return new Matrix(this.getRowCount(), this.getColumnCount(), (row, column1) -> column == column1 ? mapper.getNewValue(row, this.get(row, column)) : this.get(row, column1));
+    public RMatrix mapColumn(int column, RVector.Mapper mapper) {
+        return new RMatrix(this.getRowCount(), this.getColumnCount(), (row, column1) -> column == column1 ? mapper.getNewValue(row, this.get(row, column)) : this.get(row, column1));
     }
 
-    public Matrix mapColumnAndSet(int column, Vector.Mapper mapper) {
+    public RMatrix mapColumnAndSet(int column, RVector.Mapper mapper) {
         for(int row = 0; row < this.getRowCount(); row++) {
             this.set(row, column, mapper.getNewValue(row, this.get(row, column)));
         }
@@ -112,65 +114,65 @@ public class Matrix {
         return this;
     }
 
-    public Vector.View getRow(int row) {
-        return new Vector.View(this.getColumnCount(),
+    public RVector.View getRow(int row) {
+        return new RVector.View(this.getColumnCount(),
                 column -> this.get(row, column), (column, value) -> this.set(row, column, value));
     }
 
-    public Vector.View getColumn(int column) {
-        return new Vector.View(this.getRowCount(),
+    public RVector.View getColumn(int column) {
+        return new RVector.View(this.getRowCount(),
                 row -> this.get(row, column), (row, value) -> this.set(row, column, value));
     }
 
-    public Vector getRowCopy(int row) {
-        return new Vector(this.getColumnCount(), i -> this.get(row, i));
+    public RVector getRowCopy(int row) {
+        return new RVector(this.getColumnCount(), i -> this.get(row, i));
     }
 
-    public Vector getColumnCopy(int column) {
-        return new Vector(this.getRowCount(), i -> this.get(i, column));
+    public RVector getColumnCopy(int column) {
+        return new RVector(this.getRowCount(), i -> this.get(i, column));
     }
 
-    public Matrix setRow(int row, Vector value) {
+    public RMatrix setRow(int row, RVector value) {
         return this.mapRowAndSet(row, (index, oldValue) -> value.get(index));
     }
 
-    public Matrix setColumn(int column, Vector value) {
+    public RMatrix setColumn(int column, RVector value) {
         return this.mapColumnAndSet(column, (index, oldValue) -> value.get(index));
     }
 
-    public Matrix withRow(int row, Vector value) {
+    public RMatrix withRow(int row, RVector value) {
         return this.mapRow(row, value.toMapper());
     }
 
-    public Matrix withColumn(int column, Vector value) {
+    public RMatrix withColumn(int column, RVector value) {
         return this.mapColumn(column, value.toMapper());
     }
 
-    public Vector.View[] getRows() {
-        Vector.View[] rows = new Vector.View[this.getRowCount()];
+    public RVector.View[] getRows() {
+        RVector.View[] rows = new RVector.View[this.getRowCount()];
         for(int i = 0; i < rows.length; i++)rows[i] = this.getRow(i);
         return rows;
     }
 
-    public Vector.View[] getColumns() {
-        Vector.View[] columns = new Vector.View[this.getColumnCount()];
+    public RVector.View[] getColumns() {
+        RVector.View[] columns = new RVector.View[this.getColumnCount()];
         for(int i = 0; i < columns.length; i++)columns[i] = this.getColumn(i);
         return columns;
     }
 
-    public Vector[] getRowsCopy() {
-        Vector[] rows = new Vector[this.getRowCount()];
+    public RVector[] getRowsCopy() {
+        RVector[] rows = new RVector[this.getRowCount()];
         for(int i = 0; i < rows.length; i++)rows[i] = this.getRowCopy(i);
         return rows;
     }
 
-    public Vector[] getColumnsCopy() {
-        Vector[] columns = new Vector[this.getColumnCount()];
+    public RVector[] getColumnsCopy() {
+        RVector[] columns = new RVector[this.getColumnCount()];
         for(int i = 0; i < columns.length; i++)columns[i] = this.getColumnCopy(i);
         return columns;
     }
 
-    public Matrix swap(int r1, int c1, int r2, int c2) {
+    public RMatrix swap(int r1, int c1, int r2, int c2) {
         return this.map((row, column, oldValue) -> {
             if(row == r1 && column == c1) {
                 row = r2; column = c2;
@@ -182,7 +184,7 @@ public class Matrix {
         });
     }
 
-    public Matrix swapRows(int r1, int r2) {
+    public RMatrix swapRows(int r1, int r2) {
         return this.map((row, column, oldValue) -> {
             if(row == r1)row = r2;
             else if(row == r2)row = r1;
@@ -190,7 +192,7 @@ public class Matrix {
         });
     }
 
-    public Matrix swapColumns(int c1, int c2) {
+    public RMatrix swapColumns(int c1, int c2) {
         return this.map((row, column, oldValue) -> {
             if(column == c1)column = c2;
             else if(column == c2)column = c1;
@@ -198,26 +200,26 @@ public class Matrix {
         });
     }
 
-    public Matrix swapAndSet(int r1, int c1, int r2, int c2) {
-        Rational oldValue = this.get(r1, c1);
+    public RMatrix swapAndSet(int r1, int c1, int r2, int c2) {
+        Real oldValue = this.get(r1, c1);
         return this.set(r1, c1, this.get(r2, c2)).set(r2, c2, oldValue);
     }
 
-    public Matrix swapRowsAndSet(int r1, int r2) {
-        Vector oldRow = this.getRowCopy(r1);
+    public RMatrix swapRowsAndSet(int r1, int r2) {
+        RVector oldRow = this.getRowCopy(r1);
         return this.mapRowAndSet(r1, (index, oldValue) -> this.get(r2, index)).mapRowAndSet(r2, oldRow.toMapper());
     }
 
-    public Matrix swapColumnsAndSet(int c1, int c2) {
-        Vector oldColumn = this.getColumnCopy(c1);
+    public RMatrix swapColumnsAndSet(int c1, int c2) {
+        RVector oldColumn = this.getColumnCopy(c1);
         return this.mapColumnAndSet(c1, (index, oldValue) -> this.get(c2, index)).mapColumnAndSet(c2, oldColumn.toMapper());
     }
 
-    public Matrix transpose() {
-        return new Matrix(this.getColumnCount(), this.getRowCount(), (row, column) -> this.get(column, row));
+    public RMatrix transpose() {
+        return new RMatrix(this.getColumnCount(), this.getRowCount(), (row, column) -> this.get(column, row));
     }
 
-    public Matrix transposeAndSet() {
+    public RMatrix transposeAndSet() {
         if(!this.isSquare()) {
             throw new IllegalStateException("Mutating a non-square matrix");
         }
@@ -225,7 +227,7 @@ public class Matrix {
         return this.mapAndSet((row, column, oldValue) -> this.get(column, row));
     }
 
-    public Matrix add(Matrix other) {
+    public RMatrix add(RMatrix other) {
         if(this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) {
             throw new IllegalArgumentException("Adding two matrices with different dimensions");
         }
@@ -233,7 +235,7 @@ public class Matrix {
         return this.map((row, column, oldValue) -> oldValue.add(other.get(row, column)));
     }
 
-    public Matrix addAndSet(Matrix other) {
+    public RMatrix addAndSet(RMatrix other) {
         if(this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) {
             throw new IllegalArgumentException("Adding two matrices with different dimensions");
         }
@@ -241,7 +243,7 @@ public class Matrix {
         return this.mapAndSet((row, column, oldValue) -> oldValue.add(other.get(row, column)));
     }
 
-    public Matrix subtract(Matrix other) {
+    public RMatrix subtract(RMatrix other) {
         if(this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) {
             throw new IllegalArgumentException("Adding two matrices with different dimensions");
         }
@@ -249,7 +251,7 @@ public class Matrix {
         return this.map((row, column, oldValue) -> oldValue.subtract(other.get(row, column)));
     }
 
-    public Matrix subtractAndSet(Matrix other) {
+    public RMatrix subtractAndSet(RMatrix other) {
         if(this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) {
             throw new IllegalArgumentException("Adding two matrices with different dimensions");
         }
@@ -257,91 +259,91 @@ public class Matrix {
         return this.mapAndSet((row, column, oldValue) -> oldValue.subtract(other.get(row, column)));
     }
 
-    public Matrix multiply(Matrix other) {
+    public RMatrix multiply(RMatrix other) {
         if(this.getColumnCount() != other.getRowCount()) {
             throw new IllegalArgumentException("Multiplying two matrices with disallowed dimensions");
         }
 
-        Vector[] rows = this.getRows();
-        Vector[] columns = other.getColumns();
-        return this.map((row, column, oldValue) -> rows[row].dot(columns[column]));
+        RVector[] rows = this.getRows();
+        RVector[] columns = other.getColumns();
+        return new RMatrix(rows.length, columns.length, (row, column) -> rows[row].dot(columns[column]));
     }
 
-    public Matrix multiplyAndSet(Matrix other) {
-        if(this.getColumnCount() != other.getRowCount()) {
-            throw new IllegalArgumentException("Multiplying two matrices with disallowed dimensions");
+    public RMatrix multiplyAndSet(RMatrix other) {
+        if(this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) {
+            throw new IllegalArgumentException("Multiplying mutable matrix with disallowed dimensions");
         }
 
-        Vector[] rows = this.getRows();
-        Vector[] columns = other.getColumns();
+        RVector[] rows = this.getRows();
+        RVector[] columns = other.getColumns();
         return this.mapAndSet((row, column, oldValue) -> rows[row].dot(columns[column]));
     }
 
-    public Vector multiply(Vector vector) {
+    public RVector multiply(RVector vector) {
         return vector.multiply(this);
     }
 
-    public Vector multiplyAndSet(Vector vector) {
+    public RVector multiplyAndSet(RVector vector) {
         return vector.multiplyAndSet(this);
     }
 
-    public Matrix multiply(Rational scalar) {
+    public RMatrix multiply(Real scalar) {
         return this.map((row, column, oldValue) -> this.get(row, column).multiply(scalar));
     }
 
-    public Matrix multiplyAndSet(Rational scalar) {
+    public RMatrix multiplyAndSet(Real scalar) {
         return this.mapAndSet((row, column, oldValue) -> this.get(row, column).multiply(scalar));
     }
 
-    public Matrix divide(Rational scalar) {
+    public RMatrix divide(Real scalar) {
         return this.map((row, column, oldValue) -> this.get(row, column).divide(scalar));
     }
 
-    public Matrix divideAndSet(Rational scalar) {
+    public RMatrix divideAndSet(Real scalar) {
         return this.mapAndSet((row, column, oldValue) -> this.get(row, column).divide(scalar));
     }
 
-    public Matrix invert() {
+    public RMatrix invert() {
         return this.luDecompose().getInverse();
     }
 
-    public Matrix invertAndSet() {
-        Matrix inverse = this.invert();
+    public RMatrix invertAndSet() {
+        RMatrix inverse = this.invert();
         return this.mapAndSet((row, column, oldValue) -> inverse.get(row, column));
     }
 
-    public Rational getDeterminant() {
+    public Real getDeterminant() {
         return this.luDecompose().getDeterminant();
     }
 
-    public LUDecomposition luDecompose() {
-        return new LUDecomposition(this);
+    public LUDecomposition.R luDecompose() {
+        return LUDecomposition.of(this);
     }
 
-    public Matrix sub(int r1, int c1, int rowCount, int columnCount) {
-        return new Matrix.View(rowCount, columnCount,
+    public RMatrix sub(int r1, int c1, int rowCount, int columnCount) {
+        return new RMatrix.View(rowCount, columnCount,
                 (row, column) -> this.get(r1 + row, c1 + column),
                 (row, column, value) -> this.set(r1 + row, c1 + column, value));
     }
 
-    public Matrix subCopy(int r1, int c1, int rowCount, int columnCount) {
+    public RMatrix subCopy(int r1, int c1, int rowCount, int columnCount) {
         return this.sub(r1, c1, rowCount, columnCount).copy();
     }
 
-    public Matrix.Augmented mergeToAugmented(Matrix extra) {
+    public RMatrix.Augmented mergeToAugmented(RMatrix extra) {
         if(this.getRowCount() != extra.getRowCount()) {
             throw new UnsupportedOperationException("Merging two matrices with different row count");
         }
 
-        return new Matrix.Augmented(this, extra);
+        return new RMatrix.Augmented(this, extra);
     }
 
-    public Matrix.Augmented splitToAugmented(int columnSplit) {
-        return new Matrix.Augmented(this, columnSplit);
+    public RMatrix.Augmented splitToAugmented(int columnSplit) {
+        return new RMatrix.Augmented(this, columnSplit);
     }
 
-    public Matrix copy() {
-        return new Matrix(this.getRowCount(), this.getColumnCount(), this.toGenerator());
+    public RMatrix copy() {
+        return new RMatrix(this.getRowCount(), this.getColumnCount(), this.toGenerator());
     }
 
     @Override
@@ -358,8 +360,8 @@ public class Matrix {
     @Override
     public boolean equals(Object other) {
         if(this == other)return true;
-        if(!(other instanceof Matrix))return false;
-        Matrix matrix = (Matrix)other;
+        if(!(other instanceof RMatrix))return false;
+        RMatrix matrix = (RMatrix)other;
         if(this.getRowCount() != matrix.getRowCount())return false;
         if(this.getColumnCount() != matrix.getColumnCount())return false;
 
@@ -375,7 +377,7 @@ public class Matrix {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        Vector[] rows = this.getRows();
+        RVector[] rows = this.getRows();
 
         for(int i = 0; i < rows.length; i++) {
             sb.append(rows[i].toString()).append(i < rows.length - 1 ? "\n" : "");
@@ -384,7 +386,7 @@ public class Matrix {
         return sb.toString();
     }
 
-    public static class View extends Matrix {
+    public static class View extends RMatrix {
         private final int rows;
         private final int columns;
         private final Generator getter;
@@ -409,44 +411,44 @@ public class Matrix {
         }
 
         @Override
-        public Rational get(int row, int column) {
+        public Real get(int row, int column) {
             return this.getter.getValue(row, column);
         }
 
         @Override
-        public Matrix set(int row, int column, Rational value) {
+        public RMatrix set(int row, int column, Real value) {
             this.setter.set(row, column, value);
             return this;
         }
 
         @FunctionalInterface
         public interface Setter {
-            void set(int row, int column, Rational value);
+            void set(int row, int column, Real value);
         }
     }
 
-    public static class Augmented extends Matrix {
-        private final Matrix base;
-        private final Matrix extra;
+    public static class Augmented extends RMatrix {
+        private final RMatrix base;
+        private final RMatrix extra;
         private final int split;
 
-        public Augmented(Matrix base, Matrix extra) {
+        public Augmented(RMatrix base, RMatrix extra) {
             super(0, 0);
             this.base = base;
             this.extra = extra;
             this.split = base.getColumnCount();
         }
 
-        public Augmented(Matrix merged, int split) {
+        public Augmented(RMatrix merged, int split) {
             this(merged.sub(0, 0, merged.getRowCount() - 1, split - 1),
                     merged.sub(0, 0, merged.getRowCount() - 1, split - 1));
         }
 
-        public Matrix getBaseMatrix() {
+        public RMatrix getBaseMatrix() {
             return this.base;
         }
 
-        public Matrix getExtraMatrix() {
+        public RMatrix getExtraMatrix() {
             return this.extra;
         }
 
@@ -465,13 +467,13 @@ public class Matrix {
         }
 
         @Override
-        public Rational get(int row, int column) {
+        public Real get(int row, int column) {
             return column < this.getSplit() ? this.getBaseMatrix().get(row, column)
                     : this.getExtraMatrix().get(row, column - this.getSplit());
         }
 
         @Override
-        public Matrix set(int row, int column, Rational value) {
+        public RMatrix set(int row, int column, Real value) {
             if(column < this.getSplit()) {
                 this.getBaseMatrix().set(row, column, value);
             } else {
@@ -484,13 +486,13 @@ public class Matrix {
 
     @FunctionalInterface
     public interface Generator {
-        Rational getValue(int row, int column);
+        Real getValue(int row, int column);
 
-        default Vector.Generator forRow(int row) {
+        default RVector.Generator forRow(int row) {
             return index -> this.getValue(row, index);
         }
 
-        default Vector.Generator forColumn(int column) {
+        default RVector.Generator forColumn(int column) {
             return index -> this.getValue(index, column);
         }
 
@@ -501,13 +503,13 @@ public class Matrix {
 
     @FunctionalInterface
     public interface Mapper {
-        Rational getNewValue(int row, int column, Rational oldValue);
+        Real getNewValue(int row, int column, Real oldValue);
 
-        default Vector.Mapper forRow(int row) {
+        default RVector.Mapper forRow(int row) {
             return (index, oldValue) -> this.getNewValue(row, index, oldValue);
         }
 
-        default Vector.Mapper forColumn(int column) {
+        default RVector.Mapper forColumn(int column) {
             return (index, oldValue) -> this.getNewValue(index, column, oldValue);
         }
 
